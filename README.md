@@ -2,60 +2,24 @@
     Nama    : Ahmad Zaki Firdaus
     NIM     : 21/479669/PA/20795
 
-Kode yang disediakan adalah sebuah program Python yang mengimplementasikan kriteria stabilitas Routh untuk memeriksa stabilitas sebuah sistem dengan koefisien polinomialnya. Program ini berguna untuk membantu mempercepat dan memudahkan analisis sistem kontrol untuk menentukan apakah suatu sistem kontrol bersifat stabil atau tidak. Program ini terdiri dari dua fungsi: routh_table() dan check_stability(), dan sebuah program utama yang menerima masukan dari pengguna untuk mendapatkan koefisien polinomial dan nilai K.
+Program tersebut adalah sebuah program Python yang dapat menghitung tabel Routh-Hurwitz dan mengevaluasi stabilitas sistem kontrol dengan mengambil nilai K dari pengguna. Berikut ini adalah penjelasan dari setiap fungsi yang ada di dalam program tersebut:
 
-1. Fungsi routh_table() membuat sebuah tabel Routh untuk sekumpulan koefisien polinomial yang diberikan dengan menggunakan algoritma Routh-Hurwitz. Fungsi ini mengambil larik koefisien polinomial sebagai input dan mengembalikan matriks yang mewakili tabel Routh.
-   
-Program ini akan digunakan untuk membuat tabel Routh dari koefisien polinomial yang diberikan sebagai input. Fungsi ini memiliki tiga langkah utama yaitu:
+1. getExpr(raw_expr): Fungsi ini digunakan untuk mengubah ekspresi matematika dalam bentuk string menjadi ekspresi simbolik menggunakan fungsi parse_expr dari modul sympy.parsing.sympy_parser. Setelah itu, fungsi ini juga menyederhanakan ekspresi tersebut menggunakan fungsi simplify dari modul sympy.
 
-a. Menghitung ukuran tabel Routh yang akan dibuat. Ukuran tabel tergantung pada jumlah koefisien polinomial yang diberikan.
+2. determinant(r1c1, r1c2, r2c1, r2c2): Fungsi ini digunakan untuk menghitung determinan dari sebuah matriks 2x2 menggunakan rumus det = r1c1*r2c2 - r2c1*r1c2. Fungsi ini juga menggunakan fungsi simplify dari modul sympy untuk menyederhanakan hasil determinan.
 
-    n = len(coefficients)
-    m = (n+1)//2
-    table = np.zeros((n,m))
+3. printRouthArray(RouthArray): Fungsi ini digunakan untuk mencetak tabel Routh-Hurwitz yang telah dihitung menggunakan fungsi RouthHurwitz. Fungsi ini menerima argumen berupa matriks yang merepresentasikan tabel Routh-Hurwitz.
 
-b. Mengisi baris pertama dan kedua dari tabel Routh dengan koefisien polinomial yang diberikan.
+4. exprArrToStrArr(expr_arr): Fungsi ini digunakan untuk mengubah matriks yang merepresentasikan tabel Routh-Hurwitz dari bentuk simbolik menjadi bentuk string. Fungsi ini juga melakukan konversi tanda pangkat ** menjadi tanda pangkat ^.
 
-    table[0,:] = coefficients[0::2]
-    if n > 1:
-        table[1,:] = coefficients[1::2]
+5. ToLaTeX(str_arr): Fungsi ini digunakan untuk mengubah matriks yang merepresentasikan tabel Routh-Hurwitz dari bentuk string menjadi format LaTeX. Fungsi ini menambahkan tanda $$ di depan dan di belakang setiap elemen matriks untuk menunjukkan bahwa elemen tersebut akan ditulis dalam mode matematika di LaTeX.
 
-c. Mengisi seluruh tabel Routh dengan menggunakan rumus yang sesuai dengan aturan pembuatan tabel Routh.
+6. RouthHurwitz(polynomial): Fungsi ini adalah inti dari program tersebut. Fungsi ini menerima argumen berupa sebuah list yang berisi koefisien polinomial dalam bentuk simbolik. Fungsi ini mengembalikan tabel Routh-Hurwitz dalam bentuk matriks.
 
-    for i in range(20,n):
-        for j in range(m):
-            if j == 0:
-                table[i,j] = -1/(table[i-2,j+1])*(table[i-1,j+1]*table[i-2,j] - table[i-1,j]*table[i-2,j+1])
-            else:
-                table[i,j] = -1/(table[i-2,0])*(table[i-1,j+1]*table[i-2,0] - table[i-1,0]*table[i-2,j+1])
-            if np.isnan(table[i,j]):
-                table[i,j] = 0
-    return table
-    
-Pada setiap iterasi, program akan menghitung nilai pada sel berikutnya dari tabel Routh berdasarkan nilai-nilai pada sel yang sudah diisi sebelumnya. Jika nilai yang dihasilkan oleh rumus tersebut menghasilkan nilai NaN (Not a Number), maka nilai sel tersebut diubah menjadi 0.
+7. inputPolynomial(polynomial): Fungsi ini digunakan untuk meminta pengguna memasukkan koefisien polinomial yang akan digunakan untuk menghitung tabel Routh-Hurwitz. Fungsi ini meminta pengguna untuk memasukkan orde polinomial terlebih dahulu, lalu meminta pengguna untuk memasukkan koefisien untuk masing-masing orde secara terurut dari orde tertinggi hingga orde nol. Fungsi ini juga mencetak polinomial yang telah dimasukkan oleh pengguna.
 
-Setelah seluruh tabel Routh terisi, fungsi akan mengembalikan tabel Routh tersebut.
+8. defineKvalue adalah sebuah fungsi yang menerima dua parameter, yaitu Kvalue dan polynomial. Fungsi ini bertujuan untuk mengevaluasi nilai K dari persamaan karakteristik dan menentukan apakah sistem stabil atau tidak. Pertama-tama, fungsi ini membuat sebuah list kosong bernama equation. Selanjutnya, fungsi ini melakukan loop pada setiap elemen dalam polynomial dan jika nilai dari elemen tersebut berupa sebuah persamaan yang mengandung variabel K, maka nilai persamaan tersebut dievaluasi dengan menggunakan nilai Kvalue. Setiap hasil evaluasi persamaan tersebut kemudian ditambahkan ke dalam list equation.
 
+9. Setelah list equation terisi dengan hasil evaluasi dari persamaan karakteristik yang mengandung variabel K, maka fungsi ini melakukan loop pada setiap elemen dalam list equation. Jika terdapat setidaknya satu elemen yang bernilai negatif, maka sistem dikatakan tidak stabil dan program akan mencetak pesan "Sistem Tidak Stabil" dan mengubah nilai variabel Stabil menjadi False. Namun, jika semua nilai elemen dalam list equation non-negatif, maka sistem dikatakan stabil dan program akan mencetak pesan "Sistem Stabil".
 
-2. Fungsi check_stability() memeriksa stabilitas sistem dengan memodifikasi koefisien polinomial dengan faktor K dan kemudian memeriksa tabel Routh yang dihasilkan untuk stabilitas. Fungsi ini mengambil koefisien polinomial asli dan nilai K sebagai input, dan mengembalikan sebuah string yang menunjukkan apakah sistem stabil atau tidak stabil.
-
-Fungsi ini memiliki empat langkah utama yaitu:
-
-a. Mengubah koefisien polinomial yang diberikan dengan menambahkan nilai K pada setiap koefisien yang memiliki pangkat ganjil.
-
-    modified_coefficients = np.zeros(len(coefficients))
-    modified_coefficients[0::2] = coefficients[0::2] + K*coefficients[1::2]
-    modified_coefficients[1::2] = coefficients[1::2]
-
-b. Membuat tabel Routh dari koefisien polinomial yang sudah dimodifikasi dengan menggunakan fungsi routh_table().
-
-c. Mengecek apakah tabel Routh mengandung nilai NaN. Jika tabel Routh mengandung nilai NaN, itu berarti ada pembagian oleh nol saat membuat tabel Routh, yang menunjukkan bahwa sistem tidak stabil.
-
-d. Mengecek apakah setiap elemen pada kolom pertama tabel Routh adalah positif. Jika salah satu elemen pada kolom pertama tabel Routh negatif, itu menunjukkan bahwa sistem tidak stabil. Jika tidak ada elemen pada kolom pertama tabel Routh yang negatif, itu menunjukkan bahwa sistem stabil.
-
-Fungsi kemudian mengembalikan nilai "Sistem stabil" atau "Sistem tidak stabil" tergantung pada hasil pengecekan kestabilan yang dilakukan.
-
-
-3. Program utama meminta pengguna untuk memasukkan koefisien polinomial dan nilai K. Program ini kemudian memanggil fungsi routh_table () untuk membuat tabel Routh, dan mencetak polinomial dan tabel Routh yang dihasilkan. Kemudian memanggil fungsi check_stability() untuk memeriksa stabilitas sistem dan mencetak hasilnya.
-
-Secara keseluruhan, kode yang disediakan adalah alat yang berguna untuk memeriksa stabilitas sistem menggunakan kriteria stabilitas Routh. Program ini mudah digunakan dan dapat disesuaikan agar sesuai dengan sistem polinomial yang berbeda dengan memodifikasi koefisien input dan nilai K.
+10. Pada blok kode terakhir, program memanggil fungsi inputPolynomial untuk meminta input orde dan koefisien dari polinomial, kemudian mencetak Routh Table menggunakan fungsi RouthHurwitz dan printRouthArray. Setelah itu, program meminta input nilai K menggunakan fungsi input, dan mengevaluasi stabilitas sistem menggunakan fungsi defineKvalue.

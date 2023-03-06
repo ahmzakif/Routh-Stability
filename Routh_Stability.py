@@ -1,44 +1,140 @@
-import numpy as np
+import sympy
+from sympy import *
+from sympy import simplify
+from sympy import latex
+from sympy.parsing.sympy_parser import parse_expr
+from sympy.abc import K
 
-# fungsi untuk membuat tabel Routh
-def routh_table(coefficients):
-    n = len(coefficients)
-    m = (n+1)//2
-    table = np.zeros((n,m))
-    table[0,:] = coefficients[0::2]
-    if n > 1:
-        table[1,:] = coefficients[1::2]
-    for i in range(20,n):
-        for j in range(m):
-            if j == 0:
-                table[i,j] = -1/(table[i-2,j+1])*(table[i-1,j+1]*table[i-2,j] - table[i-1,j]*table[i-2,j+1])
-            else:
-                table[i,j] = -1/(table[i-2,0])*(table[i-1,j+1]*table[i-2,0] - table[i-1,0]*table[i-2,j+1])
-            if np.isnan(table[i,j]):
-                table[i,j] = 0
-    return table
+def getExpr(raw_expr):
+    parsed_expr = parse_expr(str(raw_expr))
+    simplified_expr = simplify(parsed_expr)
+    return simplified_expr
 
-# fungsi untuk mengecek kestabilan
-def check_stability(coefficients, K):
-    modified_coefficients = np.zeros(len(coefficients))
-    modified_coefficients[0::2] = coefficients[0::2] + K*coefficients[1::2]
-    modified_coefficients[1::2] = coefficients[1::2]
-    table = routh_table(modified_coefficients)
-    if np.any(np.isnan(table)):
-        return "Sistem tidak stabil"
-    elif np.any(table[:,0] < 0):
-        return "Sistem tidak stabil"
-    else:
-        return "Sistem stabil"
+def determinant(r1c1, r1c2, r2c1, r2c2):
+    det = simplify((r1c1 * r2c2) - (r2c1 * r1c2))
+    return det
 
-# main program
-coefficients = input("Masukkan koefisien polinomial (dipisahkan dengan spasi): ")
-coefficients = np.array(coefficients.split(), dtype=float)
-K = float(input("Masukkan nilai K: "))
-print("Polinomial:")
-print(np.poly1d(coefficients))
-print("Tabel Routh:")
-table = routh_table(coefficients)
-print(table)
-print("Kestabilan:")
-print(check_stability(coefficients, K))
+def printRouthArray(RouthArray):
+    for row in RouthArray:
+        print(str(row[0]), end = '')
+        print('\t \t', end = '')
+        for colNum in range(1, len(row)):
+            print(str(row[colNum]), '\t \t', end = '')
+        print('')
+
+def exprArrToStrArr(expr_arr):
+    str_arr = expr_arr.copy()
+    for i in range(len(str_arr)):
+        for j in range(len(str_arr[i])):
+            str_arr[i][j] = str(str_arr[i][j]).replace('**', '^')
+    return str_arr
+
+def ToLaTeX(str_arr):
+    latex_arr = str_arr.copy()
+    for i in range(len(latex_arr)):
+        for j in range(len(latex_arr[i])):
+            latex_arr[i][j] = '$$' + latex(latex_arr[i][j]) + '$$'
+    return latex_arr
+
+def RouthHurwitz(polynomial):
+    degree = len(polynomial) - 1
+
+    row1 = []
+    expr = getExpr(f's ** {degree}')
+    row1.append(expr)
+
+    for i in range(degree, -1, -2):
+        expr = getExpr(polynomial[i])
+        row1.append(expr)
+
+    row2 = []
+    expr = getExpr(f's ** {degree - 1}')
+    row2.append(expr)
+
+    for i in range(degree - 1, -1, -2):
+        expr = getExpr(polynomial[i])
+        row2.append(expr)
+
+    if len(row1) > len(row2):
+        row2.append(getExpr(0))
+
+    cols = len(row1)
+    RouthArray = [row1, row2]
+
+    rowIndex = 2
+    for i in range(degree - 2, -1, -1):
+        row = [0] * (cols)
+        row[0] = getExpr(f's ** {i}')
+
+        for colIndex in range(1, cols):
+            try:
+                r1c1 = RouthArray[rowIndex - 2][1]
+            except IndexError:
+                r1c1 = 0
+
+            try:
+                r1c2 = RouthArray[rowIndex - 2][colIndex + 1]
+            except IndexError:
+                r1c2 = 0
+
+            try:
+                r2c1 = RouthArray[rowIndex - 1][1]
+            except IndexError:
+                r2c1 = 0
+
+            try:
+                r2c2 = RouthArray[rowIndex - 1][colIndex + 1]
+            except IndexError:
+                r2c2 = 0
+
+            b = determinant(r1c1, r1c2, r2c1, r2c2) / (-r2c1)
+            b = simplify(b)
+            row[colIndex] = b
+
+        RouthArray.append(row)
+        rowIndex += 1
+
+    return RouthArray
+
+def inputPolynomial(polynomial):
+   deg=int(input('Banyak orde: '))
+   for i in range(deg,-1,-1):
+     print('Orde ',end='')
+     print(i,end=' : ')
+     polynomial.insert(0,input())
+   print()
+   print("Polinomial: ")
+   for i in range(deg,-1,-1):
+      if i!=0:
+        print(polynomial[i],end='') 
+        print('s^',end='')
+        print(i,end=' + ')
+      else:
+       print(polynomial[i])
+   print()
+
+def defineKvalue(Kvalue,polynomial):
+  equation=[]
+  stabil=True
+  for i in polynomial:
+      if type(i[1]) == sympy.core.add.Add:
+        
+        A = i[1].subs({K:Kvalue})
+        equation.append(A)
+  print(equation)
+
+  for i in equation:
+    if i < 0:
+      print("Sistem Tidak Stabil")
+      Stabil=False
+      break
+
+  if stabil==True:
+    print("Sistem Stabil")
+
+poly=[]
+inputPolynomial(poly)
+print("Routh Table: ")
+printRouthArray(RouthHurwitz(poly))
+valueK=input('K value: ')
+defineKvalue(valueK,RouthHurwitz(poly))
